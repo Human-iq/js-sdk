@@ -1,0 +1,99 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Customer Tool",
+    "description": "admin tools to interact with customer data",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://jointly-eminent-terrier.ngrok-free.app/api/gpt"
+    }
+  ],
+  "paths": {
+    "/refund": {
+      "post": {
+        "description": "Process a refund for a user",
+        "operationId": "ProcessRefund",
+        "parameters": [
+          {
+            "name": "userEmail",
+            "in": "query",
+            "description": "the email of the user to process a refund for",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "amount",
+            "in": "query",
+            "description": "the amount of the refund in u.s. dollars",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "deprecated": false
+      }
+    },
+    "/user": {
+      "get": {
+        "description": "Get a user by email. Use this tool to get information about a user in production and any metadata you need to know about them.",
+        "operationId": "GetUser",
+        "parameters": [
+          {
+            "name": "userEmail",
+            "in": "query",
+            "description": "the email of the user to get",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "deprecated": false
+      }
+    },
+    "/payment-info": {
+      "get": {
+        "description": "Get a user's bank account and payment method information.",
+        "operationId": "GetPaymentInfo",
+        "parameters": [
+          {
+            "name": "userEmail",
+            "in": "query",
+            "description": "the email of the user to get",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "deprecated": false
+      }
+    },
+    "/colleague-data": {
+      "get": {
+        "description": "Use this tool to get data from a colleague's source. Their interactions with users and history.",
+        "operationId": "GetColleagueData",
+        "parameters": [
+          {
+            "name": "colleagueEmail",
+            "in": "query",
+            "description": "the email of the colleague to get data from",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}

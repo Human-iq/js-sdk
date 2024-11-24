@@ -96,14 +96,18 @@ export const createApprovalRequest = async (
 export const needsHumanApproval =
   <T = any>(
     options: ApprovalRequestOptions<T> & {
-      type: 'async' | 'sync'
+      type?: 'async' | 'sync'
       syncTimeout?: number
     },
     tool?: (toolArguments: T) => Promise<any>
   ) =>
   async (toolArguments: T) => {
-    const { type, syncTimeout, shouldSeekApprovals, ...approvalOptions } =
-      options
+    const {
+      type = 'async',
+      syncTimeout,
+      shouldSeekApprovals,
+      ...approvalOptions
+    } = options
 
     if (type === 'sync' && !tool) {
       throw new Error('Tool is required for sync approvals')

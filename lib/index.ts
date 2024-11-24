@@ -9,10 +9,10 @@ type ApprovalArguments = Record<
 >
 
 export type ApprovalRequestOptions<T = any> = {
-  user: string
+  user?: string
   actionId: string
-  title: string
-  ask: string | ((args: T) => string)
+  title?: string
+  ask?: string | ((args: T) => string)
   approvalArguments?: ApprovalArguments | ((args: T) => ApprovalArguments)
   expiresAt?: Date
   expiresIn?: number

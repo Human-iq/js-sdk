@@ -1,4 +1,9 @@
-import type { ApprovalRequestOptions, HumaniqOptions } from '../../types'
+import type {
+  ApprovalRequestOptions,
+  CreateSafeToolOptions,
+  HumaniqOptions,
+} from '../../types'
+import { z } from 'zod'
 
 export class Interventions {
   private baseUrl: string
@@ -75,51 +80,98 @@ export class Interventions {
   }
 
   createSafeTool<T = any>(
-    options: ApprovalRequestOptions<T> & {
-      type?: 'async' | 'sync'
-      syncTimeout?: number
-    },
+    options: CreateSafeToolOptions<T>,
     tool?: (toolArguments: T) => Promise<any>
   ) {
+    const createSafeToolSchema = z.object({
+      type: z.enum(['async', 'sync']).optional().default('async'),
+      syncTimeout: z.number().optional().default(10000),
+      skip: z.union([z.boolean(), z.function()]).optional().default(false),
+      actionId: z.string(),
+      ui: z
+        .object({
+          title: z.string(),
+          ask: z.union([z.string(), z.function()]),
+          fields: z.union([z.record(z.any()), z.function()]),
+          links: z.union([z.array(z.any()), z.function()]),
+        })
+        .optional()
+        .default({
+          title: 'Approval',
+          ask: 'Do you approve?',
+          fields: {},
+          links: () => [],
+        }),
+      approvers: z
+        .array(
+          z.object({
+            name: z.string(),
+            id: z.union([z.string(), z.number()]),
+            email: z.string(),
+          })
+        )
+        .optional()
+        .default([]),
+    })
+
+    let finalOptions
+
+    try {
+      finalOptions = createSafeToolSchema.parse(options)
+    } catch (error: any) {
+      throw new Error(`Invalid options: ${error.message}`)
+    }
+
     return async (toolArguments: T) => {
       const {
         type = 'async',
         syncTimeout,
-        shouldSeekApprovals,
+        skip,
         ...approvalOptions
-      } = options
+      } = finalOptions
 
       if (type === 'sync' && !tool) {
         throw new Error('Tool is required for sync approvals')
       }
 
-      if (shouldSeekApprovals) {
-        const seekApproval = await shouldSeekApprovals(toolArguments)
-        if (!seekApproval) {
-          return tool?.(toolArguments)
+      if (skip !== undefined) {
+        if (typeof skip === 'boolean') {
+          if (skip && tool) {
+            return tool(toolArguments)
+          }
+        }
+
+        if (typeof skip === 'function') {
+          const shouldSkip = await skip(toolArguments)
+          if (shouldSkip && tool) {
+            return tool(toolArguments)
+          }
         }
       }
 
-      const ask =
-        typeof options.ask === 'function'
-          ? options.ask(toolArguments)
-          : options.ask
+      const ask: string =
+        typeof finalOptions.ui?.ask === 'function'
+          ? (finalOptions.ui.ask(toolArguments) as string)
+          : finalOptions.ui?.ask
 
       const links =
-        typeof options.links === 'function'
-          ? options.links(toolArguments)
-          : options.links
+        typeof finalOptions.ui?.links === 'function'
+          ? (finalOptions.ui.links(toolArguments) as any[])
+          : finalOptions.ui?.links || []
 
-      const approvalArguments =
-        typeof options.approvalArguments === 'function'
-          ? options.approvalArguments(toolArguments)
-          : options.approvalArguments
+      const fields =
+        typeof finalOptions.ui?.fields === 'function'
+          ? finalOptions.ui.fields(toolArguments)
+          : finalOptions.ui?.fields
 
       const requestOptions: ApprovalRequestOptions = {
-        ...approvalOptions,
-        ask,
-        approvalArguments,
-        links: links as any,
+        ...finalOptions,
+        ui: {
+          ...finalOptions.ui,
+          ask,
+          fields,
+          links,
+        },
       }
 
       if (type === 'sync') {

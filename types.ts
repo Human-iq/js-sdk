@@ -9,22 +9,32 @@ export type ApprovalArguments = Record<
 >
 
 export type ApprovalRequestOptions<T = any> = {
-  user?: string
+  // the unique id of the action that needs an intervention
   actionId: string
-  title?: string
-  ask?: string | ((args: T) => string)
-  approvalArguments?: ApprovalArguments | ((args: T) => ApprovalArguments)
+  // the associated user id of the initiator
+  userId?: string | number
+  // optional org id of the initiator
+  orgId?: string | number
   expiresAt?: Date
   expiresIn?: number
-  approvers?: { name: string; email: string }[]
+  approvers?: { name: string; email: string; id?: string | number }[]
   onApprovedCallbackUrl?: string
   onRejectedCallbackUrl?: string
   onExpiredCallbackUrl?: string
-  autoApprove?: (args: T) => Promise<boolean>
-  shouldSeekApprovals?: (args: T) => Promise<boolean>
-  links?: (
-    args: T
-  ) => { label: string; url: string }[] | { label: string; url: string }[]
+  ui?: {
+    title?: string
+    ask?: string | ((args: T) => string)
+    fields?: ApprovalArguments | ((args: T) => ApprovalArguments)
+    links?:
+      | { label: string; url: string }[]
+      | ((args: T) => { label: string; url: string }[])
+  }
+}
+
+export type CreateSafeToolOptions<T = any> = ApprovalRequestOptions & {
+  skip?: Boolean | ((args: T) => Promise<boolean>)
+  type?: 'async' | 'sync'
+  syncTimeout?: number
 }
 
 export interface HumaniqOptions {

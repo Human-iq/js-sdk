@@ -81,7 +81,7 @@ export class Interventions {
 
   createSafeTool<T = any>(
     options: CreateSafeToolOptions<T>,
-    tool?: (toolArguments: T) => Promise<any>
+    tool?: (toolArguments: T) => void | Promise<any>
   ) {
     const createSafeToolSchema = z.object({
       type: z.enum(['async', 'sync']).optional().default('async'),

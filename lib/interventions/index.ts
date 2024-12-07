@@ -6,6 +6,8 @@ import type {
 import { z } from 'zod'
 import { fetcher } from '../fetch'
 
+const API_PATH = '/api/interventions'
+
 export class Interventions {
   private baseUrl: string
 
@@ -14,13 +16,13 @@ export class Interventions {
   }
 
   async update(
-    approvalRequestId: string,
+    interventionId: string,
     status: 'approved' | 'rejected' | 'expired'
   ) {
     try {
       await fetcher({
         baseUrl: this.baseUrl,
-        path: `/api/approvals/${approvalRequestId}`,
+        path: `${API_PATH}/${interventionId}`,
         method: 'PATCH',
         body: { status },
         apiKey: this.options.apiKey,
@@ -31,11 +33,11 @@ export class Interventions {
     }
   }
 
-  async get(approvalRequestId: string) {
+  async get(interventionId: string) {
     try {
       const data = await fetcher({
         baseUrl: this.baseUrl,
-        path: `/api/approvals/${approvalRequestId}`,
+        path: `${API_PATH}/${interventionId}`,
         method: 'GET',
         apiKey: this.options.apiKey,
       })
@@ -50,12 +52,12 @@ export class Interventions {
     try {
       const data = await fetcher({
         baseUrl: this.baseUrl,
-        path: '/api/approvals',
+        path: '${API_PATH}',
         method: 'POST',
         body: options,
         apiKey: this.options.apiKey,
       })
-      return { approvalRequestId: data.approval.id, url: data.approval.url }
+      return { interventionId: data.approval.id, url: data.approval.url }
     } catch (error) {
       console.error('Failed to create approval request:', error)
       throw error
@@ -110,7 +112,7 @@ export class Interventions {
         type = 'async',
         syncTimeout,
         skip,
-        ...approvalOptions
+        ...interventionOptions
       } = finalOptions
 
       if (type === 'sync' && !tool) {
@@ -164,7 +166,7 @@ export class Interventions {
         const startTime = Date.now()
 
         while (Date.now() - startTime < timeout) {
-          const { status } = await this.get(result.approvalRequestId)
+          const { status } = await this.get(result.interventionId)
 
           if (status === 'approved') {
             if (tool) {
@@ -174,10 +176,10 @@ export class Interventions {
 
           if (status === 'rejected') {
             return {
-              approvalRequestId: result.approvalRequestId,
+              interventionId: result.interventionId,
               status: 'rejected',
               approvalRequest: 'Rejected',
-              approvers: approvalOptions.approvers,
+              approvers: interventionOptions.approvers,
               messageToUser:
                 'Let the user know that the approval request to perform this job was denied.',
             }
@@ -187,22 +189,22 @@ export class Interventions {
           await new Promise((resolve) => setTimeout(resolve, 1000))
         }
 
-        await this.update(result.approvalRequestId, 'expired')
+        await this.update(result.interventionId, 'expired')
         return {
-          approvalRequestId: result.approvalRequestId,
+          interventionId: result.interventionId,
           status: 'expired',
           approvalRequest: 'Expired',
-          approvers: approvalOptions.approvers,
+          approvers: interventionOptions.approvers,
           messageToUser:
             'Let the user know that the approval request to perform this job was not approved in time so there for you could not complete the job.',
         }
       } else {
         const result = await this.new(requestOptions)
         return {
-          approvalRequestId: result.approvalRequestId,
+          interventionId: result.interventionId,
           status: 'pending',
           approvalRequest: 'Pending',
-          approvers: approvalOptions.approvers,
+          approvers: interventionOptions.approvers,
         }
       }
     }

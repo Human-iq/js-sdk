@@ -4,6 +4,7 @@ import type {
   HumaniqOptions,
 } from '../../types'
 import { z } from 'zod'
+import { fetcher } from '../fetch'
 
 export class Interventions {
   private baseUrl: string
@@ -17,13 +18,12 @@ export class Interventions {
     status: 'approved' | 'rejected' | 'expired'
   ) {
     try {
-      await fetch(`${this.baseUrl}/api/approvals/${approvalRequestId}`, {
+      await fetcher({
+        baseUrl: this.baseUrl,
+        path: `/api/approvals/${approvalRequestId}`,
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.options.apiKey}`,
-        },
-        body: JSON.stringify({ status }),
+        body: { status },
+        apiKey: this.options.apiKey,
       })
     } catch (error) {
       console.error('Failed to update approval request:', error)
@@ -33,22 +33,12 @@ export class Interventions {
 
   async get(approvalRequestId: string) {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/api/approvals/${approvalRequestId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.options.apiKey}`,
-          },
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data: any = await response.json()
+      const data = await fetcher({
+        baseUrl: this.baseUrl,
+        path: `/api/approvals/${approvalRequestId}`,
+        method: 'GET',
+        apiKey: this.options.apiKey,
+      })
       return data.approval
     } catch (error) {
       console.error('Failed to check approval status:', error)
@@ -58,20 +48,13 @@ export class Interventions {
 
   async new(options: ApprovalRequestOptions) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/approvals`, {
+      const data = await fetcher({
+        baseUrl: this.baseUrl,
+        path: '/api/approvals',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.options.apiKey}`,
-        },
-        body: JSON.stringify(options),
+        body: options,
+        apiKey: this.options.apiKey,
       })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data: any = await response.json()
       return { approvalRequestId: data.approval.id, url: data.approval.url }
     } catch (error) {
       console.error('Failed to create approval request:', error)

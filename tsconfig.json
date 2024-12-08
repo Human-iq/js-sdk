@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./",
+    "rootDir": "",
     "baseUrl": "./",
     "lib": ["ESNext"],
     "target": "ESNext",
@@ -25,5 +25,5 @@
     "types": ["bun-types"],
     "allowSyntheticDefaultImports": true
   },
-  "include": ["lib/**/*.ts", "demos/**/*.ts", "./db.ts", "./types.ts"]
+  "include": ["**/**.ts"]
 }

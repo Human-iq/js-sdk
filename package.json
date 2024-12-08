@@ -8,8 +8,7 @@
   "scripts": {
     "build": "bun build --target=node ./lib/index.ts --outfile=dist/index.js && bun run build:declaration",
     "build:declaration": "tsc --emitDeclarationOnly --project tsconfig.types.json",
-    "postbuild": "rimraf tsconfig.types.tsbuildinfo",
-    "chat:shop": "bun run ./demos/chat/shop/index.ts"
+    "postbuild": "rimraf tsconfig.types.tsbuildinfo"
   },
   "devDependencies": {
     "@types/bun": "latest",

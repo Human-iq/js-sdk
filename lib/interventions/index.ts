@@ -2,7 +2,7 @@ import type {
   ApprovalRequestOptions,
   CreateSafeToolOptions,
   HumaniqOptions,
-} from '../../types'
+} from '../types'
 import { z } from 'zod'
 import { fetcher } from '../fetch'
 

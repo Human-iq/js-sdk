@@ -1,5 +1,5 @@
-import { Interventions } from 'lib/interventions'
-import type { HumaniqOptions } from 'types'
+import { Interventions } from './interventions'
+import type { HumaniqOptions } from './types'
 
 const defaultOptions: HumaniqOptions = {
   baseUrl: 'https://api.humaniq.dev',

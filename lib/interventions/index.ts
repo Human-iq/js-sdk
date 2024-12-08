@@ -6,7 +6,7 @@ import type {
 import { z } from 'zod'
 import { fetcher } from '../fetch'
 
-const API_PATH = '/api/interventions'
+const API_PATH = '/interventions'
 
 export class Interventions {
   private baseUrl: string
@@ -52,7 +52,7 @@ export class Interventions {
     try {
       const data = await fetcher({
         baseUrl: this.baseUrl,
-        path: '${API_PATH}',
+        path: API_PATH,
         method: 'POST',
         body: options,
         apiKey: this.options.apiKey,

@@ -32,7 +32,7 @@ export type ApprovalRequestOptions<T = any> = {
 }
 
 export type CreateSafeToolOptions<T = any> = ApprovalRequestOptions & {
-  skip?: Boolean | ((args: T) => Promise<boolean>)
+  skip?: boolean | ((args: T) => Promise<boolean>)
   type?: 'async' | 'sync'
   syncTimeout?: number
 }

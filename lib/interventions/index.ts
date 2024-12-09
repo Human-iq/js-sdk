@@ -5,6 +5,7 @@ import type {
 } from '../types'
 import { z } from 'zod'
 import { fetcher } from '../fetch'
+import { CreateSafeToolOptionsSchema } from 'lib/schemas'
 
 const API_PATH = '/interventions'
 
@@ -48,7 +49,9 @@ export class Interventions {
     }
   }
 
-  async new(options: ApprovalRequestOptions) {
+  async new(
+    options: ApprovalRequestOptions
+  ): Promise<{ intervention: any; approvers: any[] }> {
     try {
       const data = await fetcher({
         baseUrl: this.baseUrl,
@@ -57,7 +60,7 @@ export class Interventions {
         body: options,
         apiKey: this.options.apiKey,
       })
-      return { interventionId: data.approval.id, url: data.approval.url }
+      return data.data
     } catch (error) {
       console.error('Failed to create approval request:', error)
       throw error
@@ -68,41 +71,10 @@ export class Interventions {
     options: CreateSafeToolOptions<T>,
     tool?: (toolArguments: T) => void | Promise<any>
   ) {
-    const createSafeToolSchema = z.object({
-      type: z.enum(['async', 'sync']).optional().default('async'),
-      syncTimeout: z.number().optional().default(10000),
-      skip: z.union([z.boolean(), z.function()]).optional().default(false),
-      actionId: z.string(),
-      ui: z
-        .object({
-          title: z.string(),
-          ask: z.union([z.string(), z.function()]),
-          fields: z.union([z.record(z.any()), z.function()]),
-          links: z.union([z.array(z.any()), z.function()]),
-        })
-        .optional()
-        .default({
-          title: 'Approval',
-          ask: 'Do you approve?',
-          fields: {},
-          links: () => [],
-        }),
-      approvers: z
-        .array(
-          z.object({
-            name: z.string(),
-            id: z.union([z.string(), z.number()]),
-            email: z.string(),
-          })
-        )
-        .optional()
-        .default([]),
-    })
-
     let finalOptions
 
     try {
-      finalOptions = createSafeToolSchema.parse(options)
+      finalOptions = CreateSafeToolOptionsSchema.parse(options)
     } catch (error: any) {
       throw new Error(`Invalid options: ${error.message}`)
     }
@@ -166,7 +138,7 @@ export class Interventions {
         const startTime = Date.now()
 
         while (Date.now() - startTime < timeout) {
-          const { status } = await this.get(result.interventionId)
+          const { status } = await this.get(result.intervention.id)
 
           if (status === 'approved') {
             if (tool) {
@@ -176,10 +148,10 @@ export class Interventions {
 
           if (status === 'rejected') {
             return {
-              interventionId: result.interventionId,
+              interventionId: result.intervention.id,
               status: 'rejected',
               approvalRequest: 'Rejected',
-              approvers: interventionOptions.approvers,
+              approvers: result.approvers,
               messageToUser:
                 'Let the user know that the approval request to perform this job was denied.',
             }
@@ -189,22 +161,22 @@ export class Interventions {
           await new Promise((resolve) => setTimeout(resolve, 1000))
         }
 
-        await this.update(result.interventionId, 'expired')
+        await this.update(result.intervention.id, 'expired')
         return {
-          interventionId: result.interventionId,
+          interventionId: result.intervention.id,
           status: 'expired',
           approvalRequest: 'Expired',
-          approvers: interventionOptions.approvers,
+          approvers: result.approvers,
           messageToUser:
             'Let the user know that the approval request to perform this job was not approved in time so there for you could not complete the job.',
         }
       } else {
         const result = await this.new(requestOptions)
         return {
-          interventionId: result.interventionId,
+          interventionId: result.intervention.id,
           status: 'pending',
           approvalRequest: 'Pending',
-          approvers: interventionOptions.approvers,
+          approvers: result.approvers,
         }
       }
     }

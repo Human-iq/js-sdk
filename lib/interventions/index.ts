@@ -107,24 +107,24 @@ export class Interventions {
       }
 
       const ask: string =
-        typeof finalOptions.ui?.ask === 'function'
-          ? (finalOptions.ui.ask(toolArguments) as string)
-          : finalOptions.ui?.ask
+        typeof interventionOptions.ui?.ask === 'function'
+          ? (interventionOptions.ui.ask(toolArguments) as string)
+          : interventionOptions.ui?.ask
 
       const links =
-        typeof finalOptions.ui?.links === 'function'
-          ? (finalOptions.ui.links(toolArguments) as any[])
-          : finalOptions.ui?.links || []
+        typeof interventionOptions.ui?.links === 'function'
+          ? (interventionOptions.ui.links(toolArguments) as any[])
+          : interventionOptions.ui?.links || []
 
       const fields =
-        typeof finalOptions.ui?.fields === 'function'
-          ? finalOptions.ui.fields(toolArguments)
-          : finalOptions.ui?.fields
+        typeof interventionOptions.ui?.fields === 'function'
+          ? interventionOptions.ui.fields(toolArguments)
+          : interventionOptions.ui?.fields
 
       const requestOptions: ApprovalRequestOptions = {
-        ...finalOptions,
+        ...interventionOptions,
         ui: {
-          ...finalOptions.ui,
+          ...interventionOptions.ui,
           ask,
           fields,
           links,

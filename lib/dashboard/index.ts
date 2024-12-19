@@ -10,7 +10,9 @@ export class Dashboard {
     this.baseUrl = options.baseUrl
   }
 
-  async getDashboardUrl(approverId: string): Promise<string> {
+  async getDashboardUrl(
+    approverId: string
+  ): Promise<{ data: { url: string } }> {
     try {
       const data = await fetcher({
         baseUrl: this.baseUrl,

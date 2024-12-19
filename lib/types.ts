@@ -11,14 +11,27 @@ export type ApprovalArguments = Record<
 export type ApprovalRequestOptions<T = any> = {
   // the unique id of the action that needs an intervention
   actionId: string
+  type?: 'approval' | 'select' | 'answer' | 'validate'
   // the associated user id of the initiator
   userId?: string | number
   // optional org id of the initiator
   orgId?: string | number
   expiresAt?: Date
   expiresIn?: number
-  approvers?: { name: string; email: string; id?: string | number }[]
+  approvers: { name: string; email: string; id?: string | number }[]
   callbackUrl?: string
+  selectMode?: 'single' | 'multiple'
+  selectOptions?: {
+    [key: string]: {
+      value: string | number | boolean
+      description?: string
+      name: string
+      imageUrl?: string
+      metadata?: {
+        [key: string]: string | number | boolean
+      }
+    }
+  }
   ui?: {
     title?: string
     ask: string | ((args: T) => string)
@@ -31,7 +44,7 @@ export type ApprovalRequestOptions<T = any> = {
 
 export type CreateSafeToolOptions<T = any> = ApprovalRequestOptions & {
   skip?: boolean | ((args: T) => Promise<boolean>)
-  type?: 'async' | 'sync'
+  mode?: 'async' | 'sync'
   syncTimeout?: number
 }
 

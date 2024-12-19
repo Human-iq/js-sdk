@@ -5,7 +5,11 @@ import type {
 } from '../types'
 import { z } from 'zod'
 import { fetcher } from '../fetch'
-import { CreateSafeToolOptionsSchema } from 'lib/schemas'
+import {
+  ApprovalInterventionSchema,
+  CreateSafeToolOptionsSchema,
+  NewInterventionOptionsSchema,
+} from 'lib/schemas'
 
 const API_PATH = '/interventions'
 
@@ -50,14 +54,15 @@ export class Interventions {
   }
 
   async new(
-    options: ApprovalRequestOptions
+    options: z.infer<typeof ApprovalInterventionSchema>
   ): Promise<{ intervention: any; approvers: any[] }> {
     try {
+      const validatedOptions = NewInterventionOptionsSchema.parse(options)
       const data = await fetcher({
         baseUrl: this.baseUrl,
         path: API_PATH,
         method: 'POST',
-        body: options,
+        body: validatedOptions,
         apiKey: this.options.apiKey,
       })
       return data.data
@@ -81,13 +86,13 @@ export class Interventions {
 
     return async (toolArguments: T) => {
       const {
-        type = 'async',
+        mode = 'async',
         syncTimeout,
         skip,
         ...interventionOptions
       } = finalOptions
 
-      if (type === 'sync' && !tool) {
+      if (mode === 'sync' && !tool) {
         throw new Error('Tool is required for sync approvals')
       }
 
@@ -117,15 +122,18 @@ export class Interventions {
 
       const links =
         typeof interventionOptions.ui?.links === 'function'
-          ? (interventionOptions.ui.links(toolArguments) as any[])
+          ? (interventionOptions.ui.links(toolArguments) as {
+              label: string
+              url: string
+            }[])
           : interventionOptions.ui?.links || []
 
       const fields =
         typeof interventionOptions.ui?.fields === 'function'
-          ? (interventionOptions.ui.fields(toolArguments) as any)
+          ? interventionOptions.ui.fields(toolArguments)
           : interventionOptions.ui?.fields
 
-      const requestOptions: ApprovalRequestOptions = {
+      const requestOptions = {
         ...interventionOptions,
         ui: {
           ...interventionOptions.ui,
@@ -133,10 +141,12 @@ export class Interventions {
           fields,
           links,
         },
+        type: interventionOptions.type || 'approval',
+        approvers: interventionOptions.approvers || [],
       }
 
-      if (type === 'sync') {
-        const result = await this.new(requestOptions)
+      if (mode === 'sync') {
+        const result = await this.new(requestOptions as any)
 
         const timeout = syncTimeout || 20000 // Default 20 seconds
         const startTime = Date.now()
@@ -175,7 +185,7 @@ export class Interventions {
             'Let the user know that the approval request to perform this job was not approved in time so there for you could not complete the job.',
         }
       } else {
-        const result = await this.new(requestOptions)
+        const result = await this.new(requestOptions as any)
         return {
           interventionId: result.intervention.id,
           status: 'pending',

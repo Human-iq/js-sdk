@@ -18,12 +18,10 @@ export type ApprovalRequestOptions<T = any> = {
   expiresAt?: Date
   expiresIn?: number
   approvers?: { name: string; email: string; id?: string | number }[]
-  onApprovedCallbackUrl?: string
-  onRejectedCallbackUrl?: string
-  onExpiredCallbackUrl?: string
+  callbackUrl?: string
   ui?: {
     title?: string
-    ask?: string | ((args: T) => string)
+    ask: string | ((args: T) => string)
     fields?: ApprovalArguments | ((args: T) => ApprovalArguments)
     links?:
       | { label: string; url: string }[]

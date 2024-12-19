@@ -106,10 +106,14 @@ export class Interventions {
         }
       }
 
-      const ask: string =
+      const ask =
         typeof interventionOptions.ui?.ask === 'function'
           ? (interventionOptions.ui.ask(toolArguments) as string)
           : interventionOptions.ui?.ask
+
+      if (!ask) {
+        throw new Error('You must supply an [ask] field.')
+      }
 
       const links =
         typeof interventionOptions.ui?.links === 'function'
@@ -118,7 +122,7 @@ export class Interventions {
 
       const fields =
         typeof interventionOptions.ui?.fields === 'function'
-          ? interventionOptions.ui.fields(toolArguments)
+          ? (interventionOptions.ui.fields(toolArguments) as any)
           : interventionOptions.ui?.fields
 
       const requestOptions: ApprovalRequestOptions = {
